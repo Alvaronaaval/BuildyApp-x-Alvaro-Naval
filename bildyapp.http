@@ -1,0 +1,12 @@
+
+@baseUrl = http://localhost:3000/api
+
+
+
+POST {{baseUrl}}/user/register HTTP/1.1
+Content-Type: application/json
+
+{
+  "email": "estudiante@bildy.com",
+  "password": "MiPasswordSegura123"
+}
