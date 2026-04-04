@@ -13,10 +13,10 @@ const companySchema = new mongoose.Schema({
     },
     logo: String,
     isFreelance: Boolean,
-    deleted: { type: Boolean, default: false } // Para el borrado lógico (soft delete)
+    deleted: { type: Boolean, default: false }
 },
     {
-        timestamps: true // Esto añade automáticamente createdAt y updatedAt ¡Magia!
+        timestamps: true
     });
 
 export default mongoose.model('Company', companySchema);
