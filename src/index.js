@@ -1,7 +1,13 @@
 import app from './app.js';
+import { dbConnect } from './config/db.js';
 
-const PORT = process.env.PORT || 3000;
+const port = process.env.PORT || 3000;
 
-app.listen(PORT, () => {
-    console.log(`Servidor corriendo en http://localhost:${PORT}`);
-});
+const startServer = async () => {
+    await dbConnect();
+    app.listen(port, () => {
+        console.log(`Servidor inicializado en el puerto ${port}. Modo: ${process.env.NODE_ENV}`);
+    });
+};
+
+startServer();

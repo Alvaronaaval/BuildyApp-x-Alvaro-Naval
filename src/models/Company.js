@@ -13,10 +13,11 @@ const companySchema = new mongoose.Schema({
     },
     logo: String,
     isFreelance: Boolean,
-    deleted: { type: Boolean, default: false }
+    deleted: { type: Boolean, default: false } // Para el borrado lógico
 },
     {
-        timestamps: true
+        timestamps: true,
+        versionKey: false
     });
 
 export default mongoose.model('Company', companySchema);

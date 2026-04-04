@@ -2,16 +2,16 @@
 import mongoose from 'mongoose';
 
 const userSchema = new mongoose.Schema({
-    email: { type: String, required: true, unique: true }, // unique: true crea un índice único automáticamente
+    email: { type: String, required: true, unique: true },
     password: { type: String, required: true },
     name: String,
     lastName: String,
     nif: String,
-    role: { type: String, enum: ['admin', 'guest'], default: 'admin' }, // enum restringe los valores permitidos
+    role: { type: String, enum: ['admin', 'guest'], default: 'admin' },
     status: { type: String, enum: ['pending', 'verified'], default: 'pending' },
     verificationCode: String,
     verificationAttempts: { type: Number, default: 3 },
-    company: { type: mongoose.Schema.Types.ObjectId, ref: 'Company' }, // Relación con la compañía
+    company: { type: mongoose.Schema.Types.ObjectId, ref: 'Company' },
     address: {
         street: String,
         number: String,
@@ -23,6 +23,7 @@ const userSchema = new mongoose.Schema({
 },
     {
         timestamps: true,
+        versionKey: false,
         toJSON: { virtuals: true }
     });
 
