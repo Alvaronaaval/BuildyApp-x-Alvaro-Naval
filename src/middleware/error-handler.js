@@ -1,13 +1,45 @@
+import { AppError } from '../utils/AppError.js';
+
+export const notFound = (req, res, next) => {
+    next(AppError.notFound(`Ruta ${req.method} ${req.originalUrl}`));
+};
+
 export const errorHandler = (err, req, res, next) => {
+
+    console.error('ERROR REAL CAPTURADO:', err);
+
     if (err.isOperational) {
         return res.status(err.statusCode).json({
-            error: err.message
+            error: true,
+            message: err.message,
+            code: err.code
         });
     }
 
-    console.error('Error no controlado:', err);
+    if (err.name === 'ZodError') {
+        const details = err.errors.map(e => ({
+            field: e.path.join('.'),
+            message: e.message
+        }));
+        return res.status(400).json({
+            error: true,
+            message: 'Error de validación',
+            code: 'VALIDATION_ERROR',
+            details
+        });
+    }
+
+    if (err.code === 11000) {
+        return res.status(409).json({
+            error: true,
+            message: 'El registro ya existe',
+            code: 'DUPLICATE_KEY'
+        });
+    }
 
     res.status(500).json({
-        error: 'Error interno del servidor'
+        error: true,
+        message: 'Error interno del servidor',
+        code: 'INTERNAL_ERROR'
     });
-};  
+};

@@ -1,9 +1,9 @@
-
 import mongoose from 'mongoose';
+import { softDeletePlugin } from '../utils/softDelete.js';
 
 const userSchema = new mongoose.Schema({
     email: { type: String, required: true, unique: true },
-    password: { type: String, required: true },
+    password: { type: String, required: true, select: false },
     name: String,
     lastName: String,
     nif: String,
@@ -18,23 +18,21 @@ const userSchema = new mongoose.Schema({
         postal: String,
         city: String,
         province: String
-    },
-    deleted: { type: Boolean, default: false }
-},
-    {
-        timestamps: true,
-        versionKey: false,
-        toJSON: { virtuals: true }
-    });
-
+    }
+}, {
+    timestamps: true,
+    versionKey: false,
+    toJSON: { virtuals: true }
+});
 
 userSchema.virtual('fullName').get(function () {
     return `${this.name} ${this.lastName}`;
 });
 
-// INDEXES
 userSchema.index({ company: 1 });
 userSchema.index({ status: 1 });
 userSchema.index({ role: 1 });
+
+userSchema.plugin(softDeletePlugin);
 
 export default mongoose.model('User', userSchema);

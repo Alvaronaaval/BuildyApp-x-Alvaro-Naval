@@ -1,4 +1,5 @@
 import mongoose from 'mongoose';
+import { softDeletePlugin } from '../utils/softDelete.js';
 
 const companySchema = new mongoose.Schema({
     owner: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
@@ -12,12 +13,12 @@ const companySchema = new mongoose.Schema({
         province: String
     },
     logo: String,
-    isFreelance: Boolean,
-    deleted: { type: Boolean, default: false } // Para el borrado lógico
-},
-    {
-        timestamps: true,
-        versionKey: false
-    });
+    isFreelance: Boolean
+}, {
+    timestamps: true,
+    versionKey: false
+});
+
+companySchema.plugin(softDeletePlugin);
 
 export default mongoose.model('Company', companySchema);

@@ -1,96 +1,299 @@
 import User from '../models/User.js';
 import Company from '../models/Company.js';
+import RefreshToken from '../models/RefreshToken.js';
+import { AppError } from '../utils/AppError.js';
+import { catchAsync } from '../utils/catchAsync.js';
+import { encrypt, compare } from '../utils/handlePassword.js';
+import { generateAccessToken, generateRefreshToken, getRefreshTokenExpiry } from '../utils/handleJwt.js';
+import { notificationService } from '../services/notification.service.js';
 
-export const register = async (req, res) => {
-    try {
-        const { email, password, name, lastName, nif } = req.body;
+export const register = catchAsync(async (req, res) => {
+    const { email, password, name, lastName, nif } = req.body;
 
-        // 1. Comprobar si el usuario ya existe
-        const existingUser = await User.findOne({ email });
-        if (existingUser) {
-            return res.status(409).json({ error: 'El email ya está registrado' });
-        }
-
-        // 2. Generar código de validación de 6 dígitos aleatorio
-        const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
-
-        // 3. Crear el usuario en MongoDB
-        const newUser = await User.create({
-            email,
-            password,
-            name,
-            lastName,
-            nif,
-            verificationCode,
-            role: 'admin',
-            status: 'pending',
-            verificationAttempts: 3
-        });
-
-        res.status(201).json({
-            mensaje: 'Usuario registrado exitosamente',
-            datos: {
-                id: newUser._id,
-                email: newUser.email,
-                role: newUser.role,
-                status: newUser.status
-            }
-        });
-
-    } catch (error) {
-        console.error('Error en registro:', error);
-        res.status(500).json({ error: 'Error interno del servidor' });
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+        throw AppError.conflict('El email ya está registrado');
     }
-};
-export const getUser = async (req, res) => {
-    try {
 
-        const mockUserId = "693344558a765785601e8596";
+    const hashedPassword = await encrypt(password);
+    const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
 
-        // Usamos populate para traer los datos de la compañía en vez de solo el ID
-        const user = await User.findById(mockUserId)
-            .populate('company');
+    const newUser = await User.create({
+        email,
+        password: hashedPassword,
+        name,
+        lastName,
+        nif,
+        verificationCode,
+        role: 'admin',
+        status: 'pending',
+        verificationAttempts: 3
+    });
 
-        if (!user) {
-            // TEMA 6 AVISO: Esto se cambiará por throw AppError.notFound()
-            return res.status(404).json({ error: 'Usuario no encontrado' });
-        }
+    const accessToken = generateAccessToken(newUser);
+    const refreshToken = generateRefreshToken();
 
-        res.json({ data: user });
-    } catch (error) {
-        console.error('Error al obtener usuario:', error);
-        res.status(500).json({ error: 'Error interno del servidor' });
+    await RefreshToken.create({
+        token: refreshToken,
+        user: newUser._id,
+        expiresAt: getRefreshTokenExpiry()
+    });
+
+    notificationService.emit('user:registered', newUser.email);
+
+    res.status(201).json({
+        mensaje: 'Usuario registrado exitosamente',
+        datos: {
+            id: newUser._id,
+            email: newUser.email,
+            role: newUser.role,
+            status: newUser.status
+        },
+        accessToken,
+        refreshToken
+    });
+});
+
+export const login = catchAsync(async (req, res) => {
+    const { email, password } = req.body;
+
+    const user = await User.findOne({ email }).select('+password');
+    if (!user) {
+        throw new AppError('Credenciales inválidas', 401);
     }
-};
 
-// PATCH /api/user/logo - Subir logo de compañía
-export const uploadLogo = async (req, res) => {
-    try {
-        if (!req.file) {
-            return res.status(400).json({ error: 'No se subió ninguna imagen' });
-        }
+    const checkPassword = await compare(password, user.password);
+    if (!checkPassword) {
+        throw new AppError('Credenciales inválidas', 401);
+    }
 
-        const mockCompanyId = "693344558a765785601e8596";
+    const accessToken = generateAccessToken(user);
+    const refreshToken = generateRefreshToken();
 
-        const logoUrl = `/uploads/${req.file.filename}`;
+    await RefreshToken.create({
+        token: refreshToken,
+        user: user._id,
+        expiresAt: getRefreshTokenExpiry()
+    });
 
-        const updatedCompany = await Company.findByIdAndUpdate(
-            mockCompanyId,
-            { logo: logoUrl },
-            { new: true }
+    user.password = undefined;
+
+    res.json({
+        datos: user,
+        accessToken,
+        refreshToken
+    });
+});
+
+export const refresh = catchAsync(async (req, res) => {
+    const { refreshToken } = req.body;
+
+    const storedToken = await RefreshToken.findOne({ token: refreshToken }).populate('user');
+
+    if (!storedToken || !storedToken.isActive()) {
+        throw new AppError('Refresh token inválido o expirado', 401);
+    }
+
+    storedToken.revokedAt = new Date();
+    await storedToken.save();
+
+    const newAccessToken = generateAccessToken(storedToken.user);
+    const newRefreshToken = generateRefreshToken();
+
+    await RefreshToken.create({
+        token: newRefreshToken,
+        user: storedToken.user._id,
+        expiresAt: getRefreshTokenExpiry()
+    });
+
+    res.json({
+        accessToken: newAccessToken,
+        refreshToken: newRefreshToken
+    });
+});
+
+export const logout = catchAsync(async (req, res) => {
+    const { refreshToken } = req.body;
+
+    if (refreshToken) {
+        await RefreshToken.findOneAndUpdate(
+            { token: refreshToken },
+            { revokedAt: new Date() }
         );
-
-        if (!updatedCompany) {
-            return res.status(404).json({ error: 'Compañía no encontrada' });
-        }
-
-        res.json({
-            mensaje: 'Logo actualizado correctamente',
-            data: updatedCompany
-        });
-
-    } catch (error) {
-        console.error('Error al subir logo:', error);
-        res.status(500).json({ error: 'Error interno del servidor' });
     }
-};
+
+    res.json({ mensaje: 'Sesión cerrada correctamente' });
+});
+
+export const getUser = catchAsync(async (req, res) => {
+    const user = await User.findById(req.user._id).populate('company');
+
+    if (!user) {
+        throw AppError.notFound('Usuario');
+    }
+
+    res.json({ data: user });
+});
+
+export const uploadLogo = catchAsync(async (req, res) => {
+    if (!req.file) {
+        throw AppError.badRequest('No se subió ninguna imagen');
+    }
+
+    if (!req.user.company) {
+        throw AppError.badRequest('El usuario no tiene una compañía asociada');
+    }
+
+    const logoUrl = `/uploads/${req.file.filename}`;
+
+    const updatedCompany = await Company.findByIdAndUpdate(
+        req.user.company,
+        { logo: logoUrl },
+        { new: true }
+    );
+
+    if (!updatedCompany) {
+        throw AppError.notFound('Compañía');
+    }
+
+    res.json({
+        mensaje: 'Logo actualizado correctamente',
+        data: updatedCompany
+    });
+});
+
+export const verifyEmail = catchAsync(async (req, res) => {
+    const { code } = req.body;
+    const user = await User.findById(req.user._id);
+
+    if (user.status === 'verified') {
+        throw AppError.badRequest('El usuario ya está verificado');
+    }
+
+    if (user.verificationAttempts <= 0) {
+        throw new AppError('Se han agotado los intentos de verificación', 429);
+    }
+
+    if (user.verificationCode !== code) {
+        user.verificationAttempts -= 1;
+        await user.save();
+        throw AppError.badRequest(`Código incorrecto. Te quedan ${user.verificationAttempts} intentos`);
+    }
+
+    user.status = 'verified';
+    user.verificationCode = undefined;
+    await user.save();
+
+    notificationService.emit('user:verified', user.email);
+
+    res.json({ mensaje: 'Email verificado correctamente', datos: user });
+});
+
+export const updatePersonalData = catchAsync(async (req, res) => {
+    const { name, lastName, nif } = req.body;
+
+    const user = await User.findByIdAndUpdate(
+        req.user._id,
+        { name, lastName, nif },
+        { new: true }
+    );
+
+    res.json({ mensaje: 'Datos personales actualizados', datos: user });
+});
+
+export const onboardingCompany = catchAsync(async (req, res) => {
+    const { isFreelance, name, cif, address } = req.body;
+    const user = await User.findById(req.user._id);
+
+    let companyCif = cif;
+    let companyName = name;
+    let companyAddress = address;
+
+    if (isFreelance) {
+        companyCif = user.nif;
+        companyName = user.fullName;
+        companyAddress = user.address;
+    }
+
+    let company = await Company.findOne({ cif: companyCif });
+
+    if (company) {
+        user.company = company._id;
+        user.role = 'guest';
+    } else {
+        company = await Company.create({
+            owner: user._id,
+            name: companyName,
+            cif: companyCif,
+            address: companyAddress,
+            isFreelance
+        });
+        user.company = company._id;
+    }
+
+    await user.save();
+
+    res.json({ mensaje: 'Compañía configurada correctamente', datos: { user, company } });
+});
+
+export const deleteUser = catchAsync(async (req, res) => {
+    const isSoft = req.query.soft === 'true';
+    const user = await User.findById(req.user._id);
+
+    if (isSoft) {
+        await user.softDelete();
+    } else {
+        await User.findByIdAndDelete(req.user._id);
+    }
+
+    notificationService.emit('user:deleted', user.email);
+
+    res.status(204).send();
+});
+
+export const changePassword = catchAsync(async (req, res) => {
+    const { currentPassword, newPassword } = req.body;
+    const user = await User.findById(req.user._id).select('+password');
+
+    const checkPassword = await compare(currentPassword, user.password);
+    if (!checkPassword) {
+        throw new AppError('La contraseña actual es incorrecta', 401);
+    }
+
+    user.password = await encrypt(newPassword);
+    await user.save();
+
+    res.json({ mensaje: 'Contraseña actualizada correctamente' });
+});
+
+export const inviteUser = catchAsync(async (req, res) => {
+    const { email, password, name, lastName, nif } = req.body;
+
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+        throw AppError.conflict('El email ya está registrado');
+    }
+
+    const hashedPassword = await encrypt(password);
+    const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
+
+    const newUser = await User.create({
+        email,
+        password: hashedPassword,
+        name,
+        lastName,
+        nif,
+        role: 'guest',
+        company: req.user.company,
+        status: 'pending',
+        verificationCode,
+        verificationAttempts: 3
+    });
+
+    notificationService.emit('user:invited', email, req.user.email);
+
+    res.status(201).json({
+        mensaje: 'Usuario invitado exitosamente',
+        datos: newUser
+    });
+});

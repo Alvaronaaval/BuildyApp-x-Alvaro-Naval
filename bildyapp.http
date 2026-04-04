@@ -1,12 +1,85 @@
+@baseUrl = http://localhost:3000/api/user
 
-@baseUrl = http://localhost:3000/api
-
-
-
-POST {{baseUrl}}/user/register HTTP/1.1
+###
+POST {{baseUrl}}/register
 Content-Type: application/json
 
 {
-  "email": "estudiante@bildy.com",
-  "password": "MiPasswordSegura123"
+    "email": "alvaro@ejemplo.com",
+    "password": "SuperPassword123",
+    "name": "Alvaro",
+    "lastName": "Naval",
+    "nif": "12345678A"
+}
+
+###
+POST {{baseUrl}}/login
+Content-Type: application/json
+
+{
+    "email": "alvaro@ejemplo.com",
+    "password": "SuperPassword123"
+}
+
+### Obtener mi usuario (Ruta protegida)
+GET {{baseUrl}}/
+Authorization: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI2OWQxODM1OGY4YjQwMzQxY2VhMjY2MDQiLCJyb2xlIjoiYWRtaW4iLCJpYXQiOjE3NzUzMzg2MjUsImV4cCI6MTc3NTMzOTUyNX0.RcAdl2K1FfmjIlBxYa2sIWCb5pyvxMuFzQOJn-AkoRU
+
+### Verificar Email
+PUT {{baseUrl}}/validation
+Content-Type: application/json
+Authorization: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI2OWQxODM1OGY4YjQwMzQxY2VhMjY2MDQiLCJyb2xlIjoiYWRtaW4iLCJpYXQiOjE3NzUzMzg2MjUsImV4cCI6MTc3NTMzOTUyNX0.RcAdl2K1FfmjIlBxYa2sIWCb5pyvxMuFzQOJn-AkoRU
+
+{
+    "code": "907365"
+}
+
+### Actualizar Datos Personales (Onboarding)
+PUT {{baseUrl}}/register
+Content-Type: application/json
+Authorization: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI2OWQxODM1OGY4YjQwMzQxY2VhMjY2MDQiLCJyb2xlIjoiYWRtaW4iLCJpYXQiOjE3NzUzMzg2MjUsImV4cCI6MTc3NTMzOTUyNX0.RcAdl2K1FfmjIlBxYa2sIWCb5pyvxMuFzQOJn-AkoRU
+
+{
+    "name": "Alvaro Modificado",
+    "lastName": "Naval Lopez",
+    "nif": "87654321Z"
+}
+
+### Crear Compañía (Onboarding Autónomo - Bonus Zod)
+PATCH {{baseUrl}}/company
+Content-Type: application/json
+Authorization: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI2OWQxODM1OGY4YjQwMzQxY2VhMjY2MDQiLCJyb2xlIjoiYWRtaW4iLCJpYXQiOjE3NzUzMzg2MjUsImV4cCI6MTc3NTMzOTUyNX0.RcAdl2K1FfmjIlBxYa2sIWCb5pyvxMuFzQOJn-AkoRU
+
+{
+    "isFreelance": true
+}
+### Cambiar Contraseña (Bonus Zod .refine)
+PUT {{baseUrl}}/password
+Content-Type: application/json
+Authorization: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI2OWQxODM1OGY4YjQwMzQxY2VhMjY2MDQiLCJyb2xlIjoiYWRtaW4iLCJpYXQiOjE3NzUzMzg2MjUsImV4cCI6MTc3NTMzOTUyNX0.RcAdl2K1FfmjIlBxYa2sIWCb5pyvxMuFzQOJn-AkoRU
+
+{
+    "currentPassword": "SuperPassword123",
+    "newPassword": "NuevaPassword456"
+}
+
+### Invitar a un compañero (Solo Admin)
+POST {{baseUrl}}/invite
+Content-Type: application/json
+Authorization: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI2OWQxODM1OGY4YjQwMzQxY2VhMjY2MDQiLCJyb2xlIjoiYWRtaW4iLCJpYXQiOjE3NzUzMzg2MjUsImV4cCI6MTc3NTMzOTUyNX0.RcAdl2K1FfmjIlBxYa2sIWCb5pyvxMuFzQOJn-AkoRU
+
+{
+    "email": "invitado@ejemplo.com",
+    "password": "InvitadoPassword123",
+    "name": "Compañero",
+    "lastName": "De Obra",
+    "nif": "99999999X"
+}
+
+### Refrescar sesión (Para obtener un nuevo access token)
+POST {{baseUrl}}/refresh
+Content-Type: application/json
+
+{
+    "refreshToken": "53cce1544fe8fef6f49d15f6242fbc6afbad51693b7666a07dbc40a93e0254a0bdd0255288ca4d4015e001d20baf7c34698d99b28ffd7adbc525c7e6062fde05"
 }
