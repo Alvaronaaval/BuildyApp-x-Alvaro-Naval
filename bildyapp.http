@@ -1,43 +1,45 @@
 @baseUrl = http://localhost:3000/api/user
+@authToken = PEGA_AQUI_TU_ACCESS_TOKEN
+@refreshToken = PEGA_AQUI_TU_REFRESH_TOKEN
 
-###
+### 1. Registro
 POST {{baseUrl}}/register
 Content-Type: application/json
 
 {
-    "email": "alvaro@ejemplo.com",
-    "password": "SuperPassword123",
+    "email": "alvaro@utad.com",
+    "password": "Password123",
     "name": "Alvaro",
     "lastName": "Naval",
     "nif": "12345678A"
 }
 
-###
+### 2. Login
 POST {{baseUrl}}/login
 Content-Type: application/json
 
 {
-    "email": "alvaro@ejemplo.com",
-    "password": "SuperPassword123"
+    "email": "alvaro@utad.com",
+    "password": "Password123"
 }
 
-### Obtener mi usuario (Ruta protegida)
+### 3. Obtener mi usuario (Ruta protegida)
 GET {{baseUrl}}/
-Authorization: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI2OWQxODM1OGY4YjQwMzQxY2VhMjY2MDQiLCJyb2xlIjoiYWRtaW4iLCJpYXQiOjE3NzUzMzg2MjUsImV4cCI6MTc3NTMzOTUyNX0.RcAdl2K1FfmjIlBxYa2sIWCb5pyvxMuFzQOJn-AkoRU
+Authorization: Bearer {{authToken}}
 
-### Verificar Email
+### 4. Verificar Email
 PUT {{baseUrl}}/validation
 Content-Type: application/json
-Authorization: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI2OWQxODM1OGY4YjQwMzQxY2VhMjY2MDQiLCJyb2xlIjoiYWRtaW4iLCJpYXQiOjE3NzUzMzg2MjUsImV4cCI6MTc3NTMzOTUyNX0.RcAdl2K1FfmjIlBxYa2sIWCb5pyvxMuFzQOJn-AkoRU
+Authorization: Bearer {{authToken}}
 
 {
-    "code": "907365"
+    "code": "AQUI_EL_CODIGO_DE_TU_BASE_DE_DATOS"
 }
 
-### Actualizar Datos Personales (Onboarding)
+### 5. Actualizar Datos Personales (Onboarding)
 PUT {{baseUrl}}/register
 Content-Type: application/json
-Authorization: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI2OWQxODM1OGY4YjQwMzQxY2VhMjY2MDQiLCJyb2xlIjoiYWRtaW4iLCJpYXQiOjE3NzUzMzg2MjUsImV4cCI6MTc3NTMzOTUyNX0.RcAdl2K1FfmjIlBxYa2sIWCb5pyvxMuFzQOJn-AkoRU
+Authorization: Bearer {{authToken}}
 
 {
     "name": "Alvaro Modificado",
@@ -45,28 +47,41 @@ Authorization: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI2OWQxODM1OGY4YjQw
     "nif": "87654321Z"
 }
 
-### Crear Compañía (Onboarding Autónomo - Bonus Zod)
+### 6. Crear Compañía (Onboarding Autónomo - Bonus Zod)
 PATCH {{baseUrl}}/company
 Content-Type: application/json
-Authorization: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI2OWQxODM1OGY4YjQwMzQxY2VhMjY2MDQiLCJyb2xlIjoiYWRtaW4iLCJpYXQiOjE3NzUzMzg2MjUsImV4cCI6MTc3NTMzOTUyNX0.RcAdl2K1FfmjIlBxYa2sIWCb5pyvxMuFzQOJn-AkoRU
+Authorization: Bearer {{authToken}}
 
 {
     "isFreelance": true
 }
-### Cambiar Contraseña (Bonus Zod .refine)
+
+### 7. Subir Logo de Compañía (multipart/form-data)
+PATCH {{baseUrl}}/logo
+Authorization: Bearer {{authToken}}
+Content-Type: multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW
+
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="logo"; filename="milogo.png"
+Content-Type: image/png
+
+< ./ruta_a_una_imagen_de_prueba.png
+------WebKitFormBoundary7MA4YWxkTrZu0gW--
+
+### 8. Cambiar Contraseña (Bonus Zod .refine)
 PUT {{baseUrl}}/password
 Content-Type: application/json
-Authorization: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI2OWQxODM1OGY4YjQwMzQxY2VhMjY2MDQiLCJyb2xlIjoiYWRtaW4iLCJpYXQiOjE3NzUzMzg2MjUsImV4cCI6MTc3NTMzOTUyNX0.RcAdl2K1FfmjIlBxYa2sIWCb5pyvxMuFzQOJn-AkoRU
+Authorization: Bearer {{authToken}}
 
 {
-    "currentPassword": "SuperPassword123",
+    "currentPassword": "Password123",
     "newPassword": "NuevaPassword456"
 }
 
-### Invitar a un compañero (Solo Admin)
+### 9. Invitar a un compañero (Solo Admin)
 POST {{baseUrl}}/invite
 Content-Type: application/json
-Authorization: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI2OWQxODM1OGY4YjQwMzQxY2VhMjY2MDQiLCJyb2xlIjoiYWRtaW4iLCJpYXQiOjE3NzUzMzg2MjUsImV4cCI6MTc3NTMzOTUyNX0.RcAdl2K1FfmjIlBxYa2sIWCb5pyvxMuFzQOJn-AkoRU
+Authorization: Bearer {{authToken}}
 
 {
     "email": "invitado@ejemplo.com",
@@ -76,10 +91,23 @@ Authorization: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI2OWQxODM1OGY4YjQw
     "nif": "99999999X"
 }
 
-### Refrescar sesión (Para obtener un nuevo access token)
+### 10. Refrescar sesión
 POST {{baseUrl}}/refresh
 Content-Type: application/json
 
 {
-    "refreshToken": "53cce1544fe8fef6f49d15f6242fbc6afbad51693b7666a07dbc40a93e0254a0bdd0255288ca4d4015e001d20baf7c34698d99b28ffd7adbc525c7e6062fde05"
+    "refreshToken": "{{refreshToken}}"
 }
+
+### 11. Cerrar Sesión (Logout)
+POST {{baseUrl}}/logout
+Content-Type: application/json
+Authorization: Bearer {{authToken}}
+
+{
+    "refreshToken": "{{refreshToken}}"
+}
+
+### 12. Eliminar Usuario (Soft Delete)
+DELETE {{baseUrl}}/?soft=true
+Authorization: Bearer {{authToken}}
