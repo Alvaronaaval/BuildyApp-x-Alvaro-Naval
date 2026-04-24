@@ -6,6 +6,8 @@ import { catchAsync } from '../utils/catchAsync.js';
 import { encrypt, compare } from '../utils/handlePassword.js';
 import { generateAccessToken, generateRefreshToken, getRefreshTokenExpiry } from '../utils/handleJwt.js';
 import { notificationService } from '../services/notification.service.js';
+import imageService from '../services/image.service.js';
+import cloudinaryService from '../services/storage.service.js';
 
 export const register = catchAsync(async (req, res) => {
     const { email, password, name, lastName, nif } = req.body;
@@ -144,11 +146,22 @@ export const uploadLogo = catchAsync(async (req, res) => {
         throw AppError.badRequest('El usuario no tiene una compañía asociada');
     }
 
-    const logoUrl = `/uploads/${req.file.filename}`;
+    // 1. Optimizar imagen: resize ≤800px + convertir a WebP
+    const optimized = await imageService.optimize(req.file.buffer, {
+        format: 'webp',
+        quality: 80,
+        maxWidth: 800,
+    });
 
+    // 2. Subir a Cloudinary y obtener la URL pública
+    const result = await cloudinaryService.uploadImage(optimized, {
+        folder: 'bildyapp/logos',
+    });
+
+    // 3. Guardar la URL en el modelo Company
     const updatedCompany = await Company.findByIdAndUpdate(
         req.user.company,
-        { logo: logoUrl },
+        { logo: result.secure_url },
         { new: true }
     );
 
@@ -158,7 +171,10 @@ export const uploadLogo = catchAsync(async (req, res) => {
 
     res.json({
         mensaje: 'Logo actualizado correctamente',
-        data: updatedCompany
+        data: {
+            logoUrl: result.secure_url,
+            company: updatedCompany,
+        },
     });
 });
 
