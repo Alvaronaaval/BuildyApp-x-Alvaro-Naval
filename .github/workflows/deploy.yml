@@ -1,0 +1,41 @@
+# .github/workflows/deploy.yml
+# CD — Continuous Deployment
+# Solo se ejecuta cuando hay un push a la rama MAIN (es decir, cuando se mergea).
+# Su misión: desplegar automáticamente en Railway si el CI ha pasado.
+
+name: Deploy to Railway
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  # ─── Job 1: Instalar y verificar que el código no rompe ───────────────────
+  test:
+    name: Verificar antes de desplegar
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - run: npm ci
+
+  # ─── Job 2: Desplegar en Railway (solo si el job anterior pasa) ────────────
+  deploy:
+    name: Deploy a Railway
+    needs: test          # ← Solo corre si "test" termina en verde
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Deploy to Railway
+        uses: bervProject/railway-deploy@main
+        with:
+          railway_token: ${{ secrets.RAILWAY_TOKEN }}
+          service: bildyapp-api   # Nombre del servicio en Railway

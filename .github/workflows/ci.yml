@@ -1,0 +1,53 @@
+# .github/workflows/ci.yml
+# CI — Continuous Integration
+# Se ejecuta en cada push y pull request a las ramas main y develop.
+# Su misión: comprobar que el código es correcto ANTES de mergear o desplegar.
+
+name: CI
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    name: Lint & Smoke Test
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. Descargar el código del repositorio
+      - name: Checkout código
+        uses: actions/checkout@v4
+
+      # 2. Instalar Node.js 22 (mismo que usamos en local y en Docker)
+      - name: Setup Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'          # Cachea node_modules para que sea más rápido
+
+      # 3. Instalar dependencias de forma determinista (usa package-lock.json)
+      - name: Instalar dependencias
+        run: npm ci
+
+      # 4. Verificar que el servidor arranca sin errores de sintaxis/import
+      #    Usamos un timeout de 5s: si arranca y escucha → OK, lo matamos.
+      #    Las variables mínimas para que no explote en el import de config:
+      - name: Smoke test — el servidor arranca
+        run: |
+          timeout 5 node src/index.js || exit_code=$?
+          # timeout devuelve 124 cuando mata el proceso por tiempo agotado (correcto)
+          # cualquier otro código distinto de 0 o 124 es un fallo real
+          if [ "${exit_code}" != "124" ] && [ "${exit_code}" != "0" ] && [ -n "${exit_code}" ]; then
+            exit 1
+          fi
+        env:
+          PORT: 3000
+          NODE_ENV: test
+          DB_URI: ${{ secrets.DB_URI }}
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
+          CLOUDINARY_CLOUD_NAME: ${{ secrets.CLOUDINARY_CLOUD_NAME }}
+          CLOUDINARY_API_KEY: ${{ secrets.CLOUDINARY_API_KEY }}
+          CLOUDINARY_API_SECRET: ${{ secrets.CLOUDINARY_API_SECRET }}

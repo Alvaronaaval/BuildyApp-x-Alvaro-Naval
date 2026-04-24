@@ -1,6 +1,7 @@
 import express from 'express';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
+import mongoose from 'mongoose';
 import userRoutes from './routes/user.routes.js';
 import { errorHandler, notFound } from './middleware/error-handler.js';
 import { sanitizeBody } from './middleware/sanitize.js';
@@ -20,6 +21,26 @@ const limiter = rateLimit({
 app.use('/api', limiter);
 
 app.use('/api/user', userRoutes);
+
+app.get('/api/health', async (req, res) => {
+    const health = {
+        status: 'ok',
+        timestamp: new Date().toISOString(),
+        uptime: process.uptime(),
+        environment: process.env.NODE_ENV
+    };
+
+    try {
+        await mongoose.connection.db.admin().ping();
+        health.database = 'connected';
+    } catch {
+        health.status = 'error';
+        health.database = 'disconnected';
+        return res.status(503).json(health);
+    }
+
+    res.json(health);
+});
 
 app.use(notFound);
 app.use(errorHandler);

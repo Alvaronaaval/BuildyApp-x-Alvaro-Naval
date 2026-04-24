@@ -1,0 +1,2 @@
+# Borro el contenido antiguo vacío y lo dejo como alias al ci.yml
+# (el archivo test.yml estaba vacío; usamos ci.yml como fichero principal)
