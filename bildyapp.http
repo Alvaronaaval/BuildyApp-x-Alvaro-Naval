@@ -111,3 +111,68 @@ Authorization: Bearer {{authToken}}
 ### 12. Eliminar Usuario (Soft Delete)
 DELETE {{baseUrl}}/?soft=true
 Authorization: Bearer {{authToken}}
+
+###########################################################
+# ENDPOINTS DE CLIENTES
+# Requiere: estar logueado + tener compañía creada
+###########################################################
+
+@clientUrl = http://localhost:3000/api/client
+@clientId = PEGA_AQUI_EL_ID_DEL_CLIENTE
+
+### 13. Crear un cliente
+POST {{clientUrl}}
+Content-Type: application/json
+Authorization: Bearer {{authToken}}
+
+{
+    "name": "Construcciones García S.L.",
+    "cif": "B12345678",
+    "email": "info@garcia.com",
+    "phone": "912345678",
+    "address": {
+        "street": "Calle Mayor",
+        "number": "10",
+        "postal": "28001",
+        "city": "Madrid",
+        "province": "Madrid"
+    }
+}
+
+### 14. Listar clientes (con paginación)
+GET {{clientUrl}}?page=1&limit=10
+Authorization: Bearer {{authToken}}
+
+### 15. Listar clientes (con filtro por nombre)
+GET {{clientUrl}}?name=García&sort=-createdAt
+Authorization: Bearer {{authToken}}
+
+### 16. Obtener un cliente concreto
+GET {{clientUrl}}/{{clientId}}
+Authorization: Bearer {{authToken}}
+
+### 17. Actualizar un cliente
+PUT {{clientUrl}}/{{clientId}}
+Content-Type: application/json
+Authorization: Bearer {{authToken}}
+
+{
+    "name": "Construcciones García Renovada S.L.",
+    "phone": "912345679"
+}
+
+### 18. Archivar un cliente (soft delete)
+DELETE {{clientUrl}}/{{clientId}}?soft=true
+Authorization: Bearer {{authToken}}
+
+### 19. Listar clientes archivados
+GET {{clientUrl}}/archived
+Authorization: Bearer {{authToken}}
+
+### 20. Restaurar un cliente archivado
+PATCH {{clientUrl}}/{{clientId}}/restore
+Authorization: Bearer {{authToken}}
+
+### 21. Eliminar un cliente permanentemente (hard delete)
+DELETE {{clientUrl}}/{{clientId}}
+Authorization: Bearer {{authToken}}
