@@ -4,6 +4,7 @@ import rateLimit from 'express-rate-limit';
 import mongoose from 'mongoose';
 import userRoutes from './routes/user.routes.js';
 import clientRoutes from './routes/client.routes.js';
+import projectRoutes from './routes/project.routes.js';
 import { errorHandler, notFound } from './middleware/error-handler.js';
 import { sanitizeBody } from './middleware/sanitize.js';
 
@@ -23,6 +24,7 @@ app.use('/api', limiter);
 
 app.use('/api/user', userRoutes);
 app.use('/api/client', clientRoutes);
+app.use('/api/project', projectRoutes);
 
 app.get('/api/health', async (req, res) => {
     const health = {

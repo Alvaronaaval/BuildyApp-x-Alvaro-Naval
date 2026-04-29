@@ -176,3 +176,73 @@ Authorization: Bearer {{authToken}}
 ### 21. Eliminar un cliente permanentemente (hard delete)
 DELETE {{clientUrl}}/{{clientId}}
 Authorization: Bearer {{authToken}}
+
+###########################################################
+# ENDPOINTS DE PROYECTOS
+# Requiere: estar logueado + tener compañía + tener cliente
+###########################################################
+
+@projectUrl = http://localhost:3000/api/project
+@projectId = PEGA_AQUI_EL_ID_DEL_PROYECTO
+
+### 22. Crear un proyecto
+POST {{projectUrl}}
+Content-Type: application/json
+Authorization: Bearer {{authToken}}
+
+{
+    "name": "Reforma Oficina Central",
+    "projectCode": "PRJ-001",
+    "client": "{{clientId}}",
+    "address": {
+        "street": "Avenida de la Constitución",
+        "number": "25",
+        "postal": "28004",
+        "city": "Madrid",
+        "province": "Madrid"
+    },
+    "email": "reforma@garcia.com",
+    "notes": "Reforma integral de la planta 3"
+}
+
+### 23. Listar proyectos (con paginación)
+GET {{projectUrl}}?page=1&limit=10
+Authorization: Bearer {{authToken}}
+
+### 24. Listar proyectos (con filtros)
+GET {{projectUrl}}?client={{clientId}}&active=true&sort=-createdAt
+Authorization: Bearer {{authToken}}
+
+### 25. Listar proyectos (filtro por nombre)
+GET {{projectUrl}}?name=Reforma
+Authorization: Bearer {{authToken}}
+
+### 26. Obtener un proyecto concreto
+GET {{projectUrl}}/{{projectId}}
+Authorization: Bearer {{authToken}}
+
+### 27. Actualizar un proyecto
+PUT {{projectUrl}}/{{projectId}}
+Content-Type: application/json
+Authorization: Bearer {{authToken}}
+
+{
+    "name": "Reforma Oficina Central - Fase 2",
+    "active": false
+}
+
+### 28. Archivar un proyecto (soft delete)
+DELETE {{projectUrl}}/{{projectId}}?soft=true
+Authorization: Bearer {{authToken}}
+
+### 29. Listar proyectos archivados
+GET {{projectUrl}}/archived
+Authorization: Bearer {{authToken}}
+
+### 30. Restaurar un proyecto archivado
+PATCH {{projectUrl}}/{{projectId}}/restore
+Authorization: Bearer {{authToken}}
+
+### 31. Eliminar un proyecto permanentemente (hard delete)
+DELETE {{projectUrl}}/{{projectId}}
+Authorization: Bearer {{authToken}}
