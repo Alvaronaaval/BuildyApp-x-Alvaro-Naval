@@ -246,3 +246,78 @@ Authorization: Bearer {{authToken}}
 ### 31. Eliminar un proyecto permanentemente (hard delete)
 DELETE {{projectUrl}}/{{projectId}}
 Authorization: Bearer {{authToken}}
+
+###########################################################
+# ENDPOINTS DE ALBARANES
+# Requiere: estar logueado + tener proyecto
+###########################################################
+
+@deliveryNoteUrl = http://localhost:3000/api/deliverynote
+@deliveryNoteId = PEGA_AQUI_EL_ID_DEL_ALBARAN
+
+### 32. Crear un albarán (tipo material)
+POST {{deliveryNoteUrl}}
+Content-Type: application/json
+Authorization: Bearer {{authToken}}
+
+{
+    "project": "{{projectId}}",
+    "format": "material",
+    "description": "Entrega de ladrillos para fachada",
+    "workDate": "2025-06-15",
+    "material": "Ladrillos cerámicos",
+    "quantity": 500,
+    "unit": "unidades"
+}
+
+### 33. Crear un albarán (tipo horas con workers)
+POST {{deliveryNoteUrl}}
+Content-Type: application/json
+Authorization: Bearer {{authToken}}
+
+{
+    "project": "{{projectId}}",
+    "format": "hours",
+    "description": "Instalación eléctrica planta 3",
+    "workDate": "2025-06-16",
+    "workers": [
+        { "name": "Carlos Ruiz", "hours": 8 },
+        { "name": "Ana López", "hours": 6 }
+    ]
+}
+
+### 34. Listar albaranes (con paginación)
+GET {{deliveryNoteUrl}}?page=1&limit=10
+Authorization: Bearer {{authToken}}
+
+### 35. Listar albaranes (con filtros)
+GET {{deliveryNoteUrl}}?format=hours&signed=false&sort=-workDate
+Authorization: Bearer {{authToken}}
+
+### 36. Listar albaranes (por rango de fechas)
+GET {{deliveryNoteUrl}}?from=2025-01-01&to=2025-12-31
+Authorization: Bearer {{authToken}}
+
+### 37. Obtener un albarán concreto
+GET {{deliveryNoteUrl}}/{{deliveryNoteId}}
+Authorization: Bearer {{authToken}}
+
+### 38. Descargar albarán en PDF
+GET {{deliveryNoteUrl}}/pdf/{{deliveryNoteId}}
+Authorization: Bearer {{authToken}}
+
+### 39. Firmar un albarán (subir imagen de firma)
+PATCH {{deliveryNoteUrl}}/{{deliveryNoteId}}/sign
+Authorization: Bearer {{authToken}}
+Content-Type: multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW
+
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="signature"; filename="firma.png"
+Content-Type: image/png
+
+< ./ruta_a_imagen_de_firma.png
+------WebKitFormBoundary7MA4YWxkTrZu0gW--
+
+### 40. Eliminar un albarán (solo si no está firmado)
+DELETE {{deliveryNoteUrl}}/{{deliveryNoteId}}
+Authorization: Bearer {{authToken}}

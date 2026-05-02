@@ -2,6 +2,9 @@ import DeliveryNote from '../models/DeliveryNote.js';
 import Project from '../models/Project.js';
 import { AppError } from '../utils/AppError.js';
 import { catchAsync } from '../utils/catchAsync.js';
+import imageService from '../services/image.service.js';
+import cloudinaryService from '../services/storage.service.js';
+import pdfService from '../services/pdf.service.js';
 
 export const createDeliveryNote = catchAsync(async (req, res) => {
     const { project, format, description, workDate, material, quantity, unit, hours, workers } = req.body;
@@ -92,6 +95,88 @@ export const getDeliveryNote = catchAsync(async (req, res) => {
     }
 
     res.json({ data: deliveryNote });
+});
+
+export const downloadPdf = catchAsync(async (req, res) => {
+    const deliveryNote = await DeliveryNote.findOne({
+        _id: req.params.id,
+        company: req.user.company
+    })
+        .populate('user', 'name lastName email')
+        .populate('client', 'name cif email phone address')
+        .populate('project', 'name projectCode address');
+
+    if (!deliveryNote) {
+        throw AppError.notFound('Albarán no encontrado');
+    }
+
+    if (deliveryNote.signed && deliveryNote.pdfUrl) {
+        const response = await fetch(deliveryNote.pdfUrl);
+        const pdfBuffer = Buffer.from(await response.arrayBuffer());
+
+        res.setHeader('Content-Type', 'application/pdf');
+        res.setHeader('Content-Disposition', 'attachment; filename="albaran.pdf"');
+        return res.send(pdfBuffer);
+    }
+
+    pdfService.streamDeliveryNotePdf(deliveryNote, res);
+});
+
+export const signDeliveryNote = catchAsync(async (req, res) => {
+    if (!req.file) {
+        throw AppError.badRequest('No se envió la imagen de firma');
+    }
+
+    const deliveryNote = await DeliveryNote.findOne({
+        _id: req.params.id,
+        company: req.user.company
+    });
+
+    if (!deliveryNote) {
+        throw AppError.notFound('Albarán no encontrado');
+    }
+
+    if (deliveryNote.signed) {
+        throw AppError.badRequest('Este albarán ya está firmado');
+    }
+
+    const optimized = await imageService.optimize(req.file.buffer, {
+        format: 'webp',
+        quality: 80,
+        maxWidth: 800,
+    });
+
+    const signatureResult = await cloudinaryService.uploadImage(optimized, {
+        folder: 'bildyapp/signatures',
+    });
+
+    deliveryNote.signed = true;
+    deliveryNote.signedAt = new Date();
+    deliveryNote.signatureUrl = signatureResult.secure_url;
+    await deliveryNote.save();
+
+    const populatedNote = await DeliveryNote.findById(deliveryNote._id)
+        .populate('user', 'name lastName email')
+        .populate('client', 'name cif email phone address')
+        .populate('project', 'name projectCode address');
+
+    const pdfBuffer = await pdfService.generateDeliveryNotePdf(populatedNote);
+
+    const pdfResult = await cloudinaryService.uploadPdf(pdfBuffer, {
+        folder: 'bildyapp/pdfs',
+    });
+
+    deliveryNote.pdfUrl = pdfResult.secure_url;
+    await deliveryNote.save();
+
+    res.json({
+        message: 'Albarán firmado correctamente',
+        data: {
+            signatureUrl: deliveryNote.signatureUrl,
+            pdfUrl: deliveryNote.pdfUrl,
+            signedAt: deliveryNote.signedAt
+        }
+    });
 });
 
 export const deleteDeliveryNote = catchAsync(async (req, res) => {

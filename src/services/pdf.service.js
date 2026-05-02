@@ -10,19 +10,35 @@ class PdfService {
             doc.on('end', () => resolve(Buffer.concat(chunks)));
             doc.on('error', reject);
 
-            this._addHeader(doc, deliveryNote);
-            this._addClientInfo(doc, deliveryNote);
-            this._addProjectInfo(doc, deliveryNote);
-            this._addDeliveryNoteDetails(doc, deliveryNote);
-
-            if (deliveryNote.signed && deliveryNote.signatureUrl) {
-                this._addSignature(doc, deliveryNote);
-            }
-
-            this._addFooter(doc);
+            this._buildContent(doc, deliveryNote);
 
             doc.end();
         });
+    }
+
+    streamDeliveryNotePdf(deliveryNote, res) {
+        res.setHeader('Content-Type', 'application/pdf');
+        res.setHeader('Content-Disposition', 'attachment; filename="albaran.pdf"');
+
+        const doc = new PDFDocument({ margin: 50 });
+        doc.pipe(res);
+
+        this._buildContent(doc, deliveryNote);
+
+        doc.end();
+    }
+
+    _buildContent(doc, deliveryNote) {
+        this._addHeader(doc, deliveryNote);
+        this._addClientInfo(doc, deliveryNote);
+        this._addProjectInfo(doc, deliveryNote);
+        this._addDetails(doc, deliveryNote);
+
+        if (deliveryNote.signed && deliveryNote.signatureUrl) {
+            this._addSignature(doc, deliveryNote);
+        }
+
+        this._addFooter(doc);
     }
 
     _addHeader(doc, deliveryNote) {
@@ -74,7 +90,7 @@ class PdfService {
         doc.moveDown();
     }
 
-    _addDeliveryNoteDetails(doc, deliveryNote) {
+    _addDetails(doc, deliveryNote) {
         doc.fontSize(12).text('Detalle del albarán', { underline: true });
         doc.moveDown(0.5);
 
@@ -146,8 +162,9 @@ class PdfService {
 
     _addSignature(doc, deliveryNote) {
         doc.moveDown(2);
-        doc.fontSize(12).text('Firma', { underline: true });
-        doc.fontSize(10).text(`Firmado el: ${new Date(deliveryNote.signedAt).toLocaleDateString('es-ES')}`);
+        doc.fontSize(12).font('Helvetica-Bold').text('Firma', { underline: true });
+        doc.font('Helvetica').fontSize(10)
+            .text(`Firmado el: ${new Date(deliveryNote.signedAt).toLocaleDateString('es-ES')}`);
         doc.moveDown(0.5);
         doc.text('[Firma digital registrada]', { align: 'center' });
     }
