@@ -1,9 +1,7 @@
 import sharp from 'sharp';
 
 class ImageService {
-  /**
-   * Optimizar imagen para web
-   */
+
   async optimize(buffer, options = {}) {
     const {
       format = 'webp',
@@ -32,9 +30,6 @@ class ImageService {
     return pipeline.toBuffer();
   }
 
-  /**
-   * Generar thumbnail
-   */
   async thumbnail(buffer, size = 150) {
     return sharp(buffer)
       .resize(size, size, { fit: 'cover' })
@@ -42,9 +37,6 @@ class ImageService {
       .toBuffer();
   }
 
-  /**
-   * Obtener metadatos de imagen
-   */
   async getMetadata(buffer) {
     return sharp(buffer).metadata();
   }

@@ -6,6 +6,7 @@ import { catchAsync } from '../utils/catchAsync.js';
 import { encrypt, compare } from '../utils/handlePassword.js';
 import { generateAccessToken, generateRefreshToken, getRefreshTokenExpiry } from '../utils/handleJwt.js';
 import { notificationService } from '../services/notification.service.js';
+import mailService from '../services/mail.service.js';
 import imageService from '../services/image.service.js';
 import cloudinaryService from '../services/storage.service.js';
 
@@ -42,6 +43,7 @@ export const register = catchAsync(async (req, res) => {
     });
 
     notificationService.emit('user:registered', newUser.email);
+    await mailService.sendVerificationCode(newUser.email, verificationCode);
 
     res.status(201).json({
         mensaje: 'Usuario registrado exitosamente',
