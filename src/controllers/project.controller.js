@@ -39,6 +39,9 @@ export const createProject = catchAsync(async (req, res) => {
         notes
     });
 
+    const io = req.app.get('io');
+    io.to(`company:${req.user.company}`).emit('project:new', { data: project });
+
     res.status(201).json({ data: project });
 });
 

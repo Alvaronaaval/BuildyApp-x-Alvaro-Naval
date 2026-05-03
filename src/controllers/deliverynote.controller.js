@@ -37,6 +37,9 @@ export const createDeliveryNote = catchAsync(async (req, res) => {
         workers
     });
 
+    const io = req.app.get('io');
+    io.to(`company:${req.user.company}`).emit('deliverynote:new', { data: deliveryNote });
+
     res.status(201).json({ data: deliveryNote });
 });
 
@@ -168,6 +171,11 @@ export const signDeliveryNote = catchAsync(async (req, res) => {
 
     deliveryNote.pdfUrl = pdfResult.secure_url;
     await deliveryNote.save();
+
+    const io = req.app.get('io');
+    io.to(`company:${req.user.company}`).emit('deliverynote:signed', {
+        data: { _id: deliveryNote._id, signedAt: deliveryNote.signedAt }
+    });
 
     res.json({
         message: 'Albarán firmado correctamente',

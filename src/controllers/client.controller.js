@@ -28,6 +28,9 @@ export const createClient = catchAsync(async (req, res) => {
         address
     });
 
+    const io = req.app.get('io');
+    io.to(`company:${req.user.company}`).emit('client:new', { data: client });
+
     res.status(201).json({ data: client });
 });
 
