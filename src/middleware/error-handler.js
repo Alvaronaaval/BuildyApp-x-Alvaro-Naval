@@ -1,4 +1,5 @@
 import { AppError } from '../utils/AppError.js';
+import loggerService from '../services/logger.service.js';
 
 export const notFound = (req, res, next) => {
     next(AppError.notFound(`Ruta ${req.method} ${req.originalUrl}`));
@@ -36,6 +37,8 @@ export const errorHandler = (err, req, res, next) => {
             code: 'DUPLICATE_KEY'
         });
     }
+
+    loggerService.logError(err, req);
 
     res.status(500).json({
         error: true,
