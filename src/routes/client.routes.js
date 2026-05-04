@@ -12,6 +12,34 @@ const router = Router();
 
 router.use(authMiddleware);
 
+/**
+ * @openapi
+ * /api/client:
+ *   post:
+ *     tags:
+ *       - Client
+ *     summary: Crear un nuevo cliente
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/Client'
+ *     responses:
+ *       201:
+ *         description: Cliente creado
+ *   get:
+ *     tags:
+ *       - Client
+ *     summary: Listar clientes
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Lista de clientes
+ */
 router.post('/', validate(createClientSchema), clientController.createClient);
 router.get('/', clientController.getClients);
 

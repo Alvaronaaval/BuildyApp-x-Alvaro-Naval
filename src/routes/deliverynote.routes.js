@@ -12,6 +12,34 @@ const router = Router();
 
 router.use(authMiddleware);
 
+/**
+ * @openapi
+ * /api/deliverynote:
+ *   post:
+ *     tags:
+ *       - DeliveryNote
+ *     summary: Crear un nuevo albarán
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/DeliveryNote'
+ *     responses:
+ *       201:
+ *         description: Albarán creado
+ *   get:
+ *     tags:
+ *       - DeliveryNote
+ *     summary: Listar albaranes
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Lista de albaranes
+ */
 router.post('/', validate(createDeliveryNoteSchema), deliveryNoteController.createDeliveryNote);
 router.get('/', deliveryNoteController.getDeliveryNotes);
 

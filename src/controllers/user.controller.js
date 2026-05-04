@@ -43,7 +43,7 @@ export const register = catchAsync(async (req, res) => {
     });
 
     notificationService.emit('user:registered', newUser.email);
-    await mailService.sendVerificationCode(newUser.email, verificationCode);
+    mailService.sendVerificationCode(newUser.email, verificationCode);
 
     res.status(201).json({
         mensaje: 'Usuario registrado exitosamente',

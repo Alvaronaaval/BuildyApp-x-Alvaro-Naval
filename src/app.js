@@ -8,6 +8,8 @@ import projectRoutes from './routes/project.routes.js';
 import deliveryNoteRoutes from './routes/deliverynote.routes.js';
 import { errorHandler, notFound } from './middleware/error-handler.js';
 import { sanitizeBody } from './middleware/sanitize.js';
+import swaggerUi from 'swagger-ui-express';
+import swaggerSpecs from './config/swagger.js';
 
 const app = express();
 
@@ -22,6 +24,8 @@ const limiter = rateLimit({
 });
 
 app.use('/api', limiter);
+
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpecs));
 
 app.use('/api/user', userRoutes);
 app.use('/api/client', clientRoutes);

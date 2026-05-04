@@ -12,6 +12,34 @@ const router = Router();
 
 router.use(authMiddleware);
 
+/**
+ * @openapi
+ * /api/project:
+ *   post:
+ *     tags:
+ *       - Project
+ *     summary: Crear un nuevo proyecto
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/Project'
+ *     responses:
+ *       201:
+ *         description: Proyecto creado
+ *   get:
+ *     tags:
+ *       - Project
+ *     summary: Listar proyectos
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Lista de proyectos
+ */
 router.post('/', validate(createProjectSchema), projectController.createProject);
 router.get('/', projectController.getProjects);
 
