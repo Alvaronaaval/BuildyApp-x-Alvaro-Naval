@@ -1,23 +1,24 @@
 export class AppError extends Error {
-    constructor(statusCode, message) {
+    constructor(message, statusCode = 500, code = 'APP_ERROR') {
         super(message);
         this.statusCode = statusCode;
+        this.code = code;
         this.isOperational = true;
     }
 
-    static badRequest(message) {
-        return new AppError(400, message);
+    static badRequest(message, code = 'BAD_REQUEST') {
+        return new AppError(message, 400, code);
     }
 
-    static unauthorized(message) {
-        return new AppError(401, message);
+    static unauthorized(message, code = 'UNAUTHORIZED') {
+        return new AppError(message, 401, code);
     }
 
-    static notFound(message = 'Recurso no encontrado') {
-        return new AppError(404, message);
+    static notFound(message = 'Recurso no encontrado', code = 'NOT_FOUND') {
+        return new AppError(message, 404, code);
     }
 
-    static conflict(message) {
-        return new AppError(409, message);
+    static conflict(message, code = 'CONFLICT') {
+        return new AppError(message, 409, code);
     }
 }

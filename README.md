@@ -1,5 +1,5 @@
-BildyApp API - Gestion de Usuarios
-Backend para la aplicacion BildyApp. API REST para la gestion de usuarios, autenticacion, onboarding de empresas y administracion de cuentas.
+BildyApp API
+Backend completo para la aplicacion BildyApp. API REST para la gestion de usuarios, autenticacion, clientes, proyectos y albaranes.
 
 Tecnologias Utilizadas
 Node.js v22 con ESM
@@ -14,9 +14,19 @@ JWT y bcryptjs para autenticacion y cifrado
 
 Helmet y Express Rate Limit para seguridad
 
-Multer para subida de archivos
+Multer y Sharp para optimizacion y subida de archivos
 
-Instalacion y Ejecucion
+Swagger (OpenAPI 3.0) para documentacion interactiva
+
+Socket.IO para webSockets y notificaciones en tiempo real
+
+Nodemailer para envio de emails
+
+Slack Webhooks para monitorizacion de errores 5XX
+
+Docker y GitHub Actions para containerizacion y CI
+
+Instalacion y Ejecucion (Local)
 Clonar el repositorio.
 
 Ejecutar npm install para descargar las dependencias.
@@ -25,23 +35,37 @@ Copiar el archivo .env.example a .env y asignar los valores reales a las variabl
 
 Ejecutar npm run dev para levantar el servidor en modo desarrollo.
 
-Funcionalidades
-Registro, login, cierre de sesion y rotacion de refresh tokens.
+Instalacion y Ejecucion (Docker)
+Asegurate de tener Docker abierto en tu equipo.
 
-Validacion de cuenta de usuario mediante codigo numerico.
+Ejecutar el comando: docker-compose up --build
+
+Esto descargara la imagen de MongoDB, creara un contenedor local para la base de datos y levantara la API automaticamente de forma vinculada.
+
+Documentacion de la API (Swagger)
+Una vez que el servidor este funcionando (local o Docker), puedes acceder a la interfaz grafica de Swagger para visualizar y probar todos los endpoints visitando:
+
+http://localhost:3000/api-docs
+
+Funcionalidades
+Registro, login, rotacion de refresh tokens y validacion de cuenta con codigo numerico.
 
 Onboarding dinamico para asignacion de compañias o creacion de perfiles freelance.
 
-Control de acceso basado en roles.
+Gestion completa de Clientes, Proyectos y Albaranes (CRUD, paginacion y borrado logico).
 
-Borrado logico de registros en base de datos.
+Generacion automatizada de documentos PDF descargables para los albaranes.
 
-Middleware centralizado para captura y formateo de errores.
+Sistema de firma de albaranes con procesamiento de imagen (Sharp) y subida a la nube (Cloudinary).
+
+Notificaciones push en tiempo real para eventos dentro de cada compañia (Socket.IO).
+
+Control de acceso basado en roles y middleware centralizado de errores.
 
 Pruebas de la API
 Se incluye un archivo bildyapp.http en la raiz del proyecto para ejecutar pruebas con la extension REST Client. Este archivo utiliza variables globales para evitar la repeticion manual de los tokens de autenticacion en cada peticion.
 
-Para probar la subida del logo de la compañia, el archivo HTTP utiliza el formato multipart/form-data. Esto permite enviar archivos binarios dividiendo el cuerpo de la peticion en compartimentos separados por un limite textual. Para que la prueba funcione localmente, es necesario colocar una imagen en el mismo directorio que el archivo HTTP y referenciarla en la peticion.
+Para probar la subida del logo de la compañia o la firma de albaranes, el archivo HTTP utiliza el formato multipart/form-data. Esto permite enviar archivos binarios dividiendo el cuerpo de la peticion en compartimentos separados por un limite textual. Para que la prueba funcione localmente, es necesario colocar una imagen en el mismo directorio que el archivo HTTP y referenciarla en la peticion.
 
 Detalles de Implementacion Interna de funciones extra
 El (express-mongo-sanitize) que me pedias en el README de la practica no es compatible con Express 5, hubiese molado un aviso. Hice un archivo .js sencillo de sanitizacion manual basica.

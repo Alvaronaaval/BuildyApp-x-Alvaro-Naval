@@ -7,7 +7,7 @@ const webhook = process.env.SLACK_WEBHOOK
 class LoggerService {
     async logError(err, req) {
         const message = [
-            '🚨 *Error 5XX en BildyApp*',
+            '*Error 5XX en BildyApp*',
             `*Timestamp:* ${new Date().toISOString()}`,
             `*Método:* ${req.method}`,
             `*Ruta:* ${req.originalUrl}`,
