@@ -1,7 +1,6 @@
 node_modules/
 .env
 *.log
-/tests
 uploads/
 .DS_Store
 docker-compose.yml
