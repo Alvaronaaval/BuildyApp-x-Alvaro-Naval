@@ -140,7 +140,7 @@ export const signDeliveryNote = catchAsync(async (req, res) => {
     }
 
     if (deliveryNote.signed) {
-        throw AppError.badRequest('Este albarán ya está firmado');
+        throw AppError.conflict('Este albarán ya está firmado y no puede volver a firmarse');
     }
 
     const optimized = await imageService.optimize(req.file.buffer, {
@@ -198,7 +198,7 @@ export const deleteDeliveryNote = catchAsync(async (req, res) => {
     }
 
     if (deliveryNote.signed) {
-        throw AppError.badRequest('No se puede eliminar un albarán firmado');
+        throw AppError.conflict('No se puede eliminar un albarán firmado — es un documento con validez legal');
     }
 
     await DeliveryNote.findByIdAndDelete(deliveryNote._id);
